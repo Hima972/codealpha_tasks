@@ -1,0 +1,247 @@
+// Room categorization
+public class Room {
+    private String roomNumber;
+    private String type; 
+    private double price;
+    private boolean isAvailable;
+    public Room(String roomNumber, String type, double price) {
+        this.roomNumber = roomNumber;
+        this.type = type;
+        this.price = price;
+        this.isAvailable = true;
+    }
+    public String getRoomNumber() {
+        return roomNumber;
+    }
+    public String getType() {
+        return type;
+    }
+    public double getPrice() {
+        return price;
+    }
+    public boolean isAvailable() {
+        return isAvailable;
+    }
+    public void setAvailable(boolean available) {
+        this.isAvailable = available;
+    }
+    @Override
+    public String toString() {
+        return "Room " + roomNumber + " (" + type + ") - Price: $" + price;
+    }
+}
+
+
+//Room Avaiability Checking
+
+import java.util.Date;
+
+public class Reservation {
+    private String guestName;
+    private Room room;
+    private Date checkInDate;
+    private Date checkOutDate;
+    private boolean isPaid;
+
+    // Constructor
+    public Reservation(String guestName, Room room, Date checkInDate, Date checkOutDate) {
+        this.guestName = guestName;
+        this.room = room;
+        this.checkInDate = checkInDate;
+        this.checkOutDate = checkOutDate;
+        this.isPaid = false;
+    }
+
+   
+    public String getGuestName() {
+        return guestName;
+    }
+
+    public Room getRoom() {
+        return room;
+    }
+
+    public Date getCheckInDate() {
+        return checkInDate;
+    }
+
+    public Date getCheckOutDate() {
+        return checkOutDate;
+    }
+
+    public boolean isPaid() {
+        return isPaid;
+    }
+
+    public void makePayment() {
+        this.isPaid = true;
+    }
+
+    @Override
+    public String toString() {
+        return "Reservation for " + guestName + " in Room " + room.getRoomNumber() + " from " + checkInDate + " to " + checkOutDate + ". Paid: " + (isPaid ? "Yes" : "No");
+    }
+}
+
+
+//Reservation Management
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Hotel {
+    private List<Room> rooms;
+    private List<Reservation> reservations;
+
+    
+    public Hotel() {
+        rooms = new ArrayList<>();
+        reservations = new ArrayList<>();
+    }
+
+    
+    public void addRoom(Room room) {
+        rooms.add(room);
+    }
+
+    
+    public List<Room> findAvailableRooms(String roomType) {
+        List<Room> availableRooms = new ArrayList<>();
+        for (Room room : rooms) {
+            if (room.isAvailable() && room.getType().equalsIgnoreCase(roomType)) {
+                availableRooms.add(room);
+            }
+        }
+        return availableRooms;
+    }
+
+    
+    public Reservation makeReservation(String guestName, String roomType, Date checkInDate, Date checkOutDate) {
+        List<Room> availableRooms = findAvailableRooms(roomType);
+        if (!availableRooms.isEmpty()) {
+            Room room = availableRooms.get(0); 
+            room.setAvailable(false); 
+            Reservation reservation = new Reservation(guestName, room, checkInDate, checkOutDate);
+            reservations.add(reservation);
+            return reservation;
+        }
+        return null; 
+    }
+
+    
+    public void displayReservations() {
+        if (reservations.isEmpty()) {
+            System.out.println("No reservations found.");
+        } else {
+            for (Reservation reservation : reservations) {
+                System.out.println(reservation);
+            }
+        }
+    }
+}   
+
+
+
+//Payment Processing
+
+public class Payment {
+   
+    public static boolean processPayment(Reservation reservation) {
+        
+        reservation.makePayment();
+        System.out.println("Payment processed successfully for " + reservation.getGuestName());
+        return true;
+    }
+}
+
+
+
+// Basic Command-line interface
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Scanner;
+
+public class HotelReservationSystem {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        Hotel hotel = new Hotel();
+
+        
+        hotel.addRoom(new Room("101", "Single", 100.00));
+        hotel.addRoom(new Room("102", "Double", 150.00));
+        hotel.addRoom(new Room("103", "Suite", 250.00));
+
+        while (true) {
+            System.out.println("\n===== Hotel Reservation System =====");
+            System.out.println("1. Search Available Rooms");
+            System.out.println("2. Make a Reservation");
+            System.out.println("3. View All Reservations");
+            System.out.println("4. Exit");
+            System.out.print("Enter your choice: ");
+            int choice = scanner.nextInt();
+            scanner.nextLine(); 
+
+            switch (choice) {
+                case 1:
+                    
+                    System.out.print("Enter room type (Single, Double, Suite): ");
+                    String roomType = scanner.nextLine();
+                    System.out.println("Searching for available rooms of type " + roomType + "...");
+                    var availableRooms = hotel.findAvailableRooms(roomType);
+                    if (availableRooms.isEmpty()) {
+                        System.out.println("No rooms available.");
+                    } else {
+                        for (Room room : availableRooms) {
+                            System.out.println(room);
+                        }
+                    }
+                    break;
+
+                case 2:
+                    
+                    try {
+                        System.out.print("Enter your name: ");
+                        String guestName = scanner.nextLine();
+                        System.out.print("Enter room type (Single, Double, Suite): ");
+                        roomType = scanner.nextLine();
+
+                        SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy");
+
+                        System.out.print("Enter check-in date (MM/dd/yyyy): ");
+                        String checkInDateStr = scanner.nextLine();
+                        Date checkInDate = sdf.parse(checkInDateStr);
+
+                        System.out.print("Enter check-out date (MM/dd/yyyy): ");
+                        String checkOutDateStr = scanner.nextLine();
+                        Date checkOutDate = sdf.parse(checkOutDateStr);
+
+                        Reservation reservation = hotel.makeReservation(guestName, roomType, checkInDate, checkOutDate);
+                        if (reservation != null) {
+                            
+                            Payment.processPayment(reservation);
+                        } else {
+                            System.out.println("No rooms available for the specified type.");
+                        }
+                    } catch (Exception e) {
+                        System.out.println("Invalid date format.");
+                    }
+                    break;
+
+                case 3:
+                    
+                    hotel.displayReservations();
+                    break;
+
+                case 4:
+                    System.out.println("Exiting system...");
+                    scanner.close();
+                    return;
+
+                default:
+                    System.out.println("Invalid choice, please try again.");
+            }
+        }
+    }
+}
+
